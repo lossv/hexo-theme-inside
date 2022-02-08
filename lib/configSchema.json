@@ -17,6 +17,11 @@
       },
       "additionalProperties": false,
       "required": ["url"]
+    },
+    "highlight": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/color" },
+      "minItems": 15
     }
   },
   "type": "object",
@@ -25,13 +30,18 @@
       "type": "object",
       "properties": {
         "accent_color": { "$ref": "#/definitions/color" },
-        "background": {
+        "foreground_color": { "$ref": "#/definitions/color" },
+        "border_color": { "$ref": "#/definitions/color" },
+        "background": { "type": "string" },
+        "sidebar_background": { "type": "string" },
+        "card_background": { "type": "string" },
+        "highlight": { "$ref": "#/definitions/highlight" },
+        "content_width": {
           "oneOf": [
-            { "type": "string" },
-            { "type": "array", "items": { "type": "string" }, "minItems": 1, "maxItems": 2 }
+            { "type": "number" },
+            { "type": "string" }
           ]
         },
-        "content_width": { "type": "number", "minimum": 320 },
         "font": {
           "type": "object",
           "properties": {
@@ -41,14 +51,23 @@
             "label": { "type": "string" },
             "heading": { "type": "string" },
             "code": { "type": "string" },
-            "base": { "type": "string" }
+            "base": { "type": "string" },
+            "print": { "type": "string" }
           },
           "additionalProperties": false
         },
-        "highlight": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/color" },
-          "minItems": 15
+        "darkmode": {
+          "type": "object",
+          "properties": {
+            "accent_color": { "$ref": "#/definitions/color" },
+            "foreground_color": { "$ref": "#/definitions/color" },
+            "border_color": { "$ref": "#/definitions/color" },
+            "background": { "type": "string" },
+            "sidebar_background": { "type": "string" },
+            "card_background": { "type": "string" },
+            "highlight": { "$ref": "#/definitions/highlight" }
+          },
+          "additionalProperties": false
         }
       },
       "required": ["accent_color"],
@@ -66,24 +85,41 @@
     },
     "menu": { "type": "object", "additionalProperties": { "type": "string" } },
     "sns": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "oneOf": [
-            { "$ref": "#/definitions/email" },
-            { "type": "null" }
-          ]
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "email": {
+              "oneOf": [
+                { "$ref": "#/definitions/email" },
+                { "type": "null" }
+              ]
+            },
+            "feed": {
+              "oneOf": [
+                { "type": "string", "format": "uri", "default": "$feed" },
+                { "type": "null" }
+              ]
+            }
+          },
+          "patternProperties": {
+            "^(github|twitter|facebook|instagram|tumblr|dribbble|telegram|youtube|hangouts|linkedin|pinterest|soundcloud|myspace|weibo|qq)$": { "type": "string" }
+          }
         },
-        "feed": {
-          "oneOf": [
-            { "type": "string", "format": "uri", "default": "$feed" },
-            { "type": "null" }
-          ]
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "icon": { "type": "string" },
+              "title": { "type": "string" },
+              "url": { "type": "string" },
+              "template": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
         }
-      },
-      "patternProperties": {
-        "^(github|twitter|facebook|instagram|tumblr|dribbble|telegram|youtube|hangouts|linkedin|pinterest|soundcloud|myspace|weibo|qq)$": { "type": "string" }
-      }
+      ]
     },
     "footer": {
       "type": "object",
@@ -131,7 +167,8 @@
               "name": { "type": "string" },
               "text": { "type": "string" },
               "qrcode": { "type": "string" },
-              "url": { "type": "string" }
+              "url": { "type": "string" },
+              "color": { "$ref": "#/definitions/color" }
             },
             "required": ["name"],
             "minProperties": 2,
@@ -211,9 +248,23 @@
         "per_page": { "$ref": "#/definitions/per_page" },
         "toc": { "type": "boolean", "default": true },
         "reward": { "type": "boolean" },
-        "copyright": { "type": "boolean" }
+        "copyright": { "type": "boolean" },
+        "reading_time": {
+          "oneOf": [
+            { "type": "boolean" },
+            {
+              "type": "object",
+              "properties": {
+                "wpm": { "type": "number", "default": 150 },
+                "text": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "default": true
+        }
       },
-      "required": ["per_page", "toc"],
+      "required": ["per_page", "toc", "reading_time"],
       "additionalProperties": false
     },
     "archive": {
@@ -296,16 +347,21 @@
     "seo": {
       "type": "object",
       "properties": {
-        "structured_data": { "type": "boolean" }
+        "structured_data": { "type": "boolean" },
+        "ssr": { "type": "boolean" }
       },
       "additionalProperties": false,
       "default": {}
     },
     "plugins": {
-      "type": "array",
       "definitions": {
-        "position": { "enum": ["sidebar", "post", "page", "comments"] }
+        "position": {
+          "enum": [
+            "sidebar", "avatar", "post", "page", "comments", "head_begin", "head_end", "body_begin", "body_end"
+          ]
+        }
       },
+      "type": "array",
       "items": {
         "oneOf": [
           { "type": "string" },
@@ -325,13 +381,11 @@
           },
           {
             "type": "object",
-            "properties": {
-              "tag": { "enum": ["script", "style", "link"] }
-            },
-            "required": ["tag"]
+            "additionalProperties": true
           }
         ]
-      }
+      },
+      "default": []
     },
     "pwa": {
       "type": "object",
@@ -380,7 +434,8 @@
                 "properties": {
                   "src": { "type": "string" },
                   "sizes": { "type": "string" },
-                  "type": { "type": "string" }
+                  "type": { "type": "string" },
+                  "purpose": { "type": "string" }
                 },
                 "required": ["src", "sizes", "type"],
                 "additionalProperties": false
@@ -394,8 +449,30 @@
       },
       "additionalProperties": false,
       "default": {}
+    },
+    "markdown": {
+      "type": "object",
+      "properties": {
+        "html": { "type": "boolean" },
+        "xhtmlOut": { "type": "boolean" },
+        "breaks": { "type": "boolean" },
+        "linkify": { "type": "boolean" },
+        "typographer": { "type": "boolean" },
+        "quotes": { "type": "string" },
+        "plugins": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "object" }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
     }
   },
-  "required": ["appearance", "profile", "footer", "toc", "page", "post", "archive", "tag", "category", "data_dir", "favicon", "pwa", "seo"],
+  "required": ["appearance", "profile", "footer", "toc", "page", "post", "archive", "tag", "category", "data_dir", "favicon", "pwa", "seo", "markdown", "plugins"],
   "additionalProperties": false
 }

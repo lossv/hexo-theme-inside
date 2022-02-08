@@ -22,8 +22,6 @@ reward:
 comments:
   load: 加载 %s
   load_faild: 加载 %s 失败，点击尝试重新加载
-  livere: Livere
-  disqus: Disqus
 
 post:
   copyright:
@@ -32,6 +30,7 @@ post:
     license: 版权声明
     published: 发表日期
     updated: 更新日期
+  reading_time: "%(words)i 字约 %(minutes)i 分钟"
 
 page:
   tags:
